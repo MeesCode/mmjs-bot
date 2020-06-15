@@ -27,37 +27,105 @@ bot.on('message', function (user, userID, channelID, message, evt) {
        
         args = args.splice(1);
         switch(cmd) {
-            case 'search':
-
-                console.log(`http://localhost:8080/search?query=${encodeURI(args.join(" "))}`)
-                fetch(`http://localhost:8080/search?query=${encodeURI(args.join(" "))}`)
-                .then(res => {
-                    console.log(res)
-                })
-                .catch(res => {
-                    console.log(res)
-                })
-
+            case 'help':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'requesting server'
+                    message: 
+`\`\`\`!search to perform a search query
+!add # to add a search result to the playlist
+!playplauze to play or pauze
+!skip to go to the next song
+!queue to see to current queue (max 10 displayed)\`\`\``
                 });
+            break;
+
+            case 'search':
+                fetch(`http://localhost:8080/search?query=${encodeURI(args.join(" "))}`)
+                .then(res => res.json())
+                .then(data => {
+                    let message = "```"
+                    for(let [k, v] of Object.entries(data)){
+                        if(v.Title.Valid && v.Artist.Valid)
+                            message += `${k}. ${v.Artist.String} - ${v.Title.String}\n`
+                        else
+                            message += `${k}. ${v.Path}\n`
+                    }
+                    bot.sendMessage({
+                        to: channelID,
+                        message: message+'```'
+                    });
+                })
+                .catch(res => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `something went wrong\n\n${res}`
+                    });
+                })
             break;
             
             case 'skip':
-                fetch('http://localhost:8080/next')
-                .then(res => {
-                    console.log(res)
+                fetch('http://localhost:8080/skip')
+                .then(res => res.json())
+                .then(data => {
+                    let message = "now playing: \n```"
+                    if(data.Title.Valid && data.Artist.Valid)
+                        message += `${data.Artist.String} - ${data.Title.String}\n`
+                    else
+                        message += `${data.Path}\n`
+                    bot.sendMessage({
+                        to: channelID,
+                        message: message+'```'
+                    });
                 })
                 .catch(res => {
-                    console.log(res)
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `something went wrong\n\n${res}`
+                    });
                 })
-
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'skipping'
-                });
             break;
+
+            case 'playpauze':
+                fetch('http://localhost:8080/playpauze')
+                .then(res => res.text())
+                .then(data => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: data
+                    });
+                })
+                .catch(res => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `something went wrong\n\n${res}`
+                    });
+                })
+            break;
+
+            case 'add':
+                fetch(`http://localhost:8080/add?query=${encodeURI(args.join(" "))}`)
+                .then(res => res.json())
+                .then(data => {
+                    let message = "added: \n```"
+                    if(data.Title.Valid && data.Artist.Valid)
+                        message += `${data.Artist.String} - ${data.Title.String}\n`
+                    else
+                        message += `${data.Path}\n`
+                    bot.sendMessage({
+                        to: channelID,
+                        message: message+'```'
+                    });
+                })
+                .catch(res => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `something went wrong\n\n${res}`
+                    });
+                })
+            break;
+
+
+
          }
      }
 });
