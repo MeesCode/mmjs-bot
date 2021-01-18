@@ -41,11 +41,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 bot.sendMessage({
                     to: channelID,
                     message: 
-`\`\`\`$search to perform a search query
-$add # to add a search result to the playlist
+`\`\`\`$search to perform a search query (max 10)
+$add <number> to add a search result to the playlist
 $playpause to play or pause
 $skip to go to the next song
-$queue to see to current queue (max 10 displayed)\`\`\``
+$queue to see to current queue\`\`\``
                 });
             break;
 
@@ -60,10 +60,9 @@ $queue to see to current queue (max 10 displayed)\`\`\``
                         });
                         return
                     }
-                    let message = "```"
+                    let message = "Add to playlist by entering `$add <number>`: ```"
                     for(let [k, v] of Object.entries(data)){
-                        if(v.Title.Valid && v.Artist.Valid)
-                            message += trackToTitle(v) + '\n'
+                        message += `${k}. ${trackToTitle(v)}\n`
                     }
                     bot.sendMessage({
                         to: channelID,
