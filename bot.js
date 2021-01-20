@@ -64,7 +64,9 @@ client.on('message', message => {
                 message.channel.send(helpMessage)
             break;
 
+            // search is dependent on the mmjs webserver
             case 'search':
+                if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
                 fetch(`http://localhost:8080/search?query=${encodeURI(args.join(" "))}`)
                 .then(res => res.json())
                 .then(data => {
@@ -85,19 +87,24 @@ client.on('message', message => {
                 })
             break;
             
+            case 'next':
             case 'skip':
+                if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
                 message.channel.send("Skipping track")
                 nextSong()
             break;
 
             case 'stop':
             case 'leave':
+            case 'disconnect':
+                if (!message.guild.me.voice.channel && connection == null) return message.channel.send("I'm not in even in a voice channel ¯\\_(ツ)_/¯ ");
                 playlist = []
                 if(connection != null) connection.disconnect()
                 message.channel.send("Aight im boutta head out")
             break;
 
             case 'add':
+                if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
                 n = parseInt(args[0], 10)
                 if (n == NaN) {
                     message.channel.send('Not a valid number')
@@ -114,6 +121,8 @@ client.on('message', message => {
                 }
             break;
 
+            case 'connect':
+            case 'start':
             case 'join':
                 if (!message.member.voice.channel) return message.channel.send("You must be in a voice channel.");
                 if (message.guild.me.voice.channel) {
@@ -128,6 +137,7 @@ client.on('message', message => {
             break;
 
             case 'queue':
+                if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
                 let m = "Queue: ```"
                 for(let [k, v] of Object.entries(playlist)){
                     if (k == 0) {
