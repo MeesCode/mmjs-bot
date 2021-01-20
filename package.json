@@ -5,8 +5,12 @@
     "main": "bot.js",
     "author": "Mees",
     "dependencies": {
-        "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+        "@discordjs/opus": "^0.3.3",
+        "ffmpeg-static": "^4.2.7",
         "node-fetch": "^2.6.0",
         "winston": "^3.2.1"
+    },
+    "devDependencies": {
+        "discord.js": "^12.5.1"
     }
 }
