@@ -25,11 +25,11 @@ client.on('ready', function (evt) {
 });
 
 function play(){
-    console.log(playlist)
     if(playlist.length === 0){
         curTextChannel.send("playlist is empty")
         return
     }
+    console.log('start playback:' + trackToTitle(playlist[0]))
     connection.play(root + playlist[0].Path).on("finish", () => 
         nextSong()
     );
@@ -61,7 +61,6 @@ client.on('message', message => {
         switch(cmd) {
 
             case 'help':
-                console.log(root)
                 message.channel.send(helpMessage)
             break;
 
@@ -87,7 +86,7 @@ client.on('message', message => {
             break;
             
             case 'skip':
-                message.channel.send("skipping track")
+                message.channel.send("Skipping track")
                 nextSong()
             break;
 
@@ -95,6 +94,7 @@ client.on('message', message => {
             case 'leave':
                 playlist = []
                 if(connection != null) connection.disconnect()
+                message.channel.send("Aight im boutta head out")
             break;
 
             case 'add':
@@ -128,12 +128,12 @@ client.on('message', message => {
             break;
 
             case 'queue':
-                let m = "now in the queue: ```"
+                let m = "Queue: ```"
                 for(let [k, v] of Object.entries(playlist)){
                     if (k == 0) {
-                        m += `${k}.\t(playing) ${trackToTitle(v)}\n`
+                        m += `${k}. (playing) ${trackToTitle(v)}\n`
                     } else {
-                        m += `${k}.\t${trackToTitle(v)}\n`
+                        m += `${k}. ${trackToTitle(v)}\n`
                     }
                 }
                 m += '```'
