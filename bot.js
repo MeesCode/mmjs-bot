@@ -12,7 +12,7 @@ const helpMessage =
 \`$add [#|all]\` to add a search result(s) to the playlist
 \`remove #\` to remove a track from the playlist
 \`$skip\`  to go to the next song
-\`$queue\` to see to current queue\`\`\``
+\`$queue\` to see to current queue`
 const root = process.argv[2]
 
 let curTextChannel = null
@@ -166,6 +166,11 @@ client.on('message', message => {
                 // add everything
                 if(args[0] == 'all') {
                     addTrack(searchresults)
+
+                    if(empty && playlist.length > 0){
+                        play()
+                    }
+                    
                     return
                 }
 
