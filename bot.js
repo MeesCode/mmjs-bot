@@ -44,7 +44,6 @@ function nextSong(){
 }
 
 function addTrack(tracks){
-    console.log(tracks)
     m = `Added to playlist:\`\`\``
     for(let n of tracks){
         m += `${trackToTitle(n)}\n`
@@ -170,7 +169,7 @@ client.on('message', message => {
                     if(empty && playlist.length > 0){
                         play()
                     }
-                    
+
                     return
                 }
 
