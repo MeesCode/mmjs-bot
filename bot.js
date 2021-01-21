@@ -5,12 +5,14 @@ const fetch = require('node-fetch');
 const client = new Discord.Client();
 client.login(auth.token);
 
-const helpMessage = `\`\`\`$join to enter your voice chat
-$leave to leave the voicechat
-$search to perform a search query (max 10)
-$add <number> to add a search result to the playlist
-$skip to go to the next song
-$queue to see to current queue\`\`\``
+const helpMessage = 
+`\`$join\` to enter your voice chat
+\`$leave\` to leave the voicechat
+\`$search\` to perform a search query (max 10)
+\`$add [#|all]\` to add a search result(s) to the playlist
+\`remove #\` to remove a track from the playlist
+\`$skip\`  to go to the next song
+\`$queue\` to see to current queue\`\`\``
 const root = process.argv[2]
 
 let curTextChannel = null
@@ -39,6 +41,17 @@ function play(){
 function nextSong(){
     playlist.shift()
     play()
+}
+
+function addTrack(tracks){
+    console.log(tracks)
+    m = `Added to playlist:\`\`\``
+    for(let n of tracks){
+        m += `${trackToTitle(n)}\n`
+        playlist.push(n)
+    }
+    m += '\`\`\`'
+    curTextChannel.send(m)
 }
 
 function trackToTitle(data){
@@ -95,8 +108,39 @@ client.on('message', message => {
             case 'next':
             case 'skip':
                 if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
+                
+                if(playlist.length < 2){
+                    message.channel.send("No new track to skip to")
+                    return
+                }
+                
                 message.channel.send("Skipping track")
                 nextSong()
+            break;
+
+            case 'delete':
+            case 'remove':
+                if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
+                if (playlist.length === 0) message.channel.send("There's nothing in the playlist yet");
+                
+                let n = parseInt(args[0], 10)
+                if (n == NaN) {
+                    message.channel.send('Not a valid number')
+                    return
+                }
+
+                if (n === 0){
+                    message.channel.send(`Can't remove currently playing track`)
+                    return
+                }
+
+                if(n > playlist.length - 1){
+                    message.channel.send(`This item is not in the queue`)
+                    return
+                }
+
+                playlist.splice(n, 1)
+
             break;
 
             case 'stop':
@@ -110,18 +154,33 @@ client.on('message', message => {
 
             case 'add':
                 if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
-                n = parseInt(args[0], 10)
-                if (n == NaN) {
-                    message.channel.send('Not a valid number')
+                let empty = false
+                if(playlist.length === 0) empty = true
+
+                // invalid command
+                if (parseInt(args[0], 10) == NaN && args[0] != 'all') {
+                    message.channel.send('Not a valid number or command')
                     return
                 }
-                if (n < 0 || n > searchresults.length - 1){
-                    message.channel.send('Number not in last search results')
+
+                // add everything
+                if(args[0] == 'all') {
+                    addTrack(searchresults)
                     return
                 }
-                playlist.push(searchresults[n])
-                message.channel.send(`Added to playlist:\`\`\`${trackToTitle(searchresults[n])}\`\`\``)
-                if(playlist.length === 1){
+
+                // add numbers
+                nums = []
+                for(let a of args){
+                    a = parseInt(a, 10)
+                    if(a == NaN) continue
+                    if (a < 0 || a > searchresults.length - 1) continue
+                    nums.push(searchresults[a])
+                }
+
+                addTrack(nums)
+                
+                if(empty && playlist.length > 0){
                     play()
                 }
             break;
@@ -130,10 +189,6 @@ client.on('message', message => {
             case 'start':
             case 'join':
                 if (!message.member.voice.channel) return message.channel.send("You must be in a voice channel.");
-                if (message.guild.me.voice.channel) {
-                    message.channel.send("I'm already here");
-                }
-
                 message.member.voice.channel.join().then(c => {
                     connection = c
                     message.channel.send(helpMessage);
@@ -143,6 +198,12 @@ client.on('message', message => {
 
             case 'queue':
                 if (!message.guild.me.voice.channel) return message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
+                
+                if(playlist.length === 0){
+                    message.channel.send('Queue is empty')
+                    return
+                }
+                
                 let m = "Queue: ```"
                 for(let [k, v] of Object.entries(playlist)){
                     if (k == 0) {
