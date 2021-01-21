@@ -54,6 +54,11 @@ client.on('message', message => {
 
     if (message.content.substring(0, 1) == '$') {
 
+        if(!message.guild){
+            message.channel.send(`If you are not in a server i don't care about your message. Im not here for personal smalltalk, loner.`)
+            return
+        }
+
         var args = message.content.substring(1).split(' ');
         var cmd = args[0];
         args = args.splice(1);
