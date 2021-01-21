@@ -92,7 +92,7 @@ client.on('message', message => {
                         return
                     }
                     searchresults = data
-                    let m = "Add to playlist by entering `$add <number>`: ```"
+                    let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
                     for(let [k, v] of Object.entries(data)){
                         m += `${k}. ${trackToTitle(v)}\n`
                     }
@@ -112,8 +112,7 @@ client.on('message', message => {
                     message.channel.send("No new track to skip to")
                     return
                 }
-                
-                message.channel.send("Skipping track")
+
                 nextSong()
             break;
 
@@ -138,7 +137,10 @@ client.on('message', message => {
                     return
                 }
 
+                let r = playlist[n]
                 playlist.splice(n, 1)
+
+                message.channel.send(`Removed:\`\`\`${trackToTitle(r)}\`\`\``)
 
             break;
 
