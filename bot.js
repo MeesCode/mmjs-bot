@@ -230,6 +230,28 @@ client.on('message', message => {
 
         break;
 
+        case 'random':
+            if (!accessCheck(message)) return            
+            fetch(`http://localhost:8080/random`)
+            .then(res => res.json())
+            .then(data => {
+                if(Object.entries(data).length == 0){
+                    message.channel.send('No entries found :(')
+                    return
+                }
+                searchresults[message.guild.id] = data
+                let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
+                for(let [k, v] of Object.entries(data)){
+                    m += `${k}. ${trackToTitle(v)}\n`
+                }
+                m += '```'
+                message.channel.send(m)
+            })
+            .catch(res => {
+                message.channel.send(`Database not responding`)
+            })
+        break;
+
         case 'queue':
             if (!accessCheck(message)) return            
             if(playlists[message.guild.id].length === 0){
