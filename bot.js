@@ -207,7 +207,7 @@ client.on('message', message => {
             nums = []
             for(let a of args){
                 a = parseInt(a, 10)
-                if(a == NaN) continue
+                if(isNaN(a)) continue
                 if (a < 0 || a > searchresults[message.guild.id].length - 1) continue
                 nums.push(searchresults[message.guild.id][a])
             }
