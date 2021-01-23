@@ -39,6 +39,10 @@ function nextSong(guild_id){
 }
 
 function addTrack(tracks, message){
+    if(tracks.length == 0){
+        message.channel.send("No tracks added")
+        return
+    }
     m = `Added to playlist:\`\`\``
     for(let n of tracks){
         m += `${trackToTitle(n)}\n`
@@ -183,7 +187,7 @@ client.on('message', message => {
             } 
 
             // invalid command
-            if (parseInt(args[0], 10) == NaN && args[0] != 'all') {
+            if (isNaN(parseInt(args[0], 10)) && args[0] != 'all') {
                 message.channel.send('Not a valid number or command')
                 return
             }
