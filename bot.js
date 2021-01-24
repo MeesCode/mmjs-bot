@@ -8,9 +8,10 @@ client.login(auth.token);
 const helpMessage = 
 `\`$join\` to enter your voice chat
 \`$leave\` to leave the voicechat
-\`$search\` to perform a search query (max 10)
+\`$search <term>\` to perform a search query (max 10)
+\`$random\` to get a list of 10 random tracks
 \`$add [#|all]\` to add a search result(s) to the playlist
-\`remove #\` to remove a track from the playlist
+\`$remove #\` to remove a track from the playlist
 \`$skip\`  to go to the next song
 \`$queue\` to see to current queue`
 const root = process.argv[2]
@@ -25,6 +26,11 @@ client.on('ready', () => {
 });
 
 function play(guild_id){
+    if(playlists[guild_id] == undefined || playlists[guild_id] == 0){
+        console.log('playlist empty')
+        return
+    }
+
     // log playback
     console.log('start playback:' + trackToTitle(playlists[guild_id][0]))
     
