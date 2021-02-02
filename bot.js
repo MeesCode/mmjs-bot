@@ -10,6 +10,7 @@ const helpMessage =
 \`$leave\` to leave the voicechat
 \`$search <term>\` to perform a search query (max 10)
 \`$random\` to get a list of 10 random tracks
+\`$popular\` to get a list of the 10 most popular tracks
 \`$add [#|all]\` to add a search result(s) to the playlist
 \`$remove #\` to remove a track from the playlist
 \`$skip\`  to go to the next song
@@ -33,10 +34,15 @@ function play(guild_id){
 
     // log playback
     console.log('start playback:' + trackToTitle(playlists[guild_id][0]))
+    incPlayCounter(playlists[guild_id][0].ID)
     
     connections[guild_id].play(root + playlists[guild_id][0].Path).on("finish", () => 
         nextSong(guild_id)
     );
+}
+
+function incPlayCounter(id){
+    fetch(`http://localhost:8080/incplaycounter?query=${id}`)
 }
 
 function nextSong(guild_id){
@@ -258,6 +264,7 @@ client.on('message', message => {
             })
         break;
 
+        case 'q':
         case 'queue':
             if (!accessCheck(message)) return            
             if(playlists[message.guild.id].length === 0){
@@ -275,6 +282,29 @@ client.on('message', message => {
             }
             m += '```'
             message.channel.send(m)
+        break;
+
+        case 'populair':
+        case 'popular':
+            if (!accessCheck(message)) return            
+            fetch(`http://localhost:8080/popular`)
+            .then(res => res.json())
+            .then(data => {
+                if(Object.entries(data).length == 0){
+                    message.channel.send('No entries found :(')
+                    return
+                }
+                searchresults[message.guild.id] = data
+                let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
+                for(let [k, v] of Object.entries(data)){
+                    m += `${k}. ${trackToTitle(v)} (${v.Plays})\n`
+                }
+                m += '```'
+                message.channel.send(m)
+            })
+            .catch(res => {
+                message.channel.send(`Database not responding`)
+            })
         break;
 
     }
