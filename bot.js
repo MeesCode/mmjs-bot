@@ -15,6 +15,7 @@ const helpMessage =
 \`$remove #\` to remove a track from the playlist
 \`$skip\`  to go to the next song
 \`$queue\` to see to current queue`
+\`$f12\` to skip to the next number`
 const root = process.argv[2]
 
 // variables to hold the playlist search results
@@ -137,6 +138,7 @@ client.on('message', message => {
         break;
         
         case 'next':
+        case 'f12':
         case 'skip':
             if (!accessCheck(message)) return            
             if(playlists[message.guild.id].length < 2){
