@@ -14,7 +14,7 @@ const helpMessage =
 \`$add [#|all]\` to add a search result(s) to the playlist
 \`$remove #\` to remove a track from the playlist
 \`$skip\`  to go to the next song
-\`$queue\` to see to current queue`
+\`$queue\` to see to current queue
 \`$f12\` to skip to the next number`
 const root = process.argv[2]
 
