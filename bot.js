@@ -122,6 +122,7 @@ client.on('message', message => {
         break;
 
         // search is dependent on the mmjs webserver
+        case 's':
         case 'search':
             if (!accessCheck(message)) return            
             fetch(`http://localhost:8080/search?query=${encodeURI(args.join(" "))}`)
@@ -156,6 +157,7 @@ client.on('message', message => {
             nextSong(message.guild.id)
         break;
 
+        case 'r':
         case 'delete':
         case 'remove':
             if (!accessCheck(message)) return            
@@ -194,6 +196,7 @@ client.on('message', message => {
             message.channel.send("Aight im boutta head out")
         break;
 
+        case 'a':
         case 'add':
             if (!accessCheck(message)) return
             
