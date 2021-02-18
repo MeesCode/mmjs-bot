@@ -95,6 +95,33 @@ function shuffleArray(array) {
     }
 }
 
+function cleanup(){
+    for(let g of Object.keys(playlists)){
+        client.guilds.fetch(g)
+        .then(guild => {
+
+            // if we are in a channel
+            if(guild.me.voice.channel){
+                if(guild.me.voice.channel.members.array().length == 1){
+
+                    delete playlists[message.guild.id]
+
+                    // this if statement should not ever _not_ fire
+                    // but i'm scared to remove it
+                    if(connections[g] != null) {
+                        connections[g].disconnect()
+                    }
+                }
+            }
+
+        })
+        .catch(err => console.log(`guild not found: ${error}`))
+    }
+}
+
+// check for cleanup every 30 seconds
+setInterval(cleanup, 30000)
+
 client.on('message', message => {
 
     // not a command
@@ -162,22 +189,20 @@ client.on('message', message => {
         case 'remove':
             if (!accessCheck(message)) return            
             
-            if (playlists[message.guild.id].length === 0) message.channel.send("There's nothing in the playlist yet")
+            if (playlists[message.guild.id].length === 0) 
+                return message.channel.send("There's nothing in the playlist yet")
             
             let n = parseInt(args[0], 10)
-            if (n == NaN) {
-                message.channel.send('Not a valid number')
-                return
+            if (isNaN(n)) {
+                return message.channel.send('Not a valid number')
             }
 
             if (n === 0){
-                message.channel.send(`Can't remove currently playing track`)
-                return
+                return message.channel.send(`Can't remove currently playing track`)
             }
 
             if(n > playlists[message.guild.id].length - 1 || n < 1){
-                message.channel.send(`This item is not in the queue`)
-                return
+                return message.channel.send(`This item is not in the queue`)
             }
 
             let r = playlists[message.guild.id][n]
@@ -190,20 +215,20 @@ client.on('message', message => {
         case 'stop':
         case 'leave':
         case 'disconnect':
-            if (!message.guild.me.voice.channel && connections[message.guild.id] == null) return message.channel.send("I'm not in even in a voice channel ¯\\_(ツ)_/¯ ")
-            playlists[message.guild.id] = []
-            if(connections[message.guild.id] != null) connections[message.guild.id].disconnect()
+            if (!message.guild.me.voice.channel && connections[message.guild.id] == null) 
+                return message.channel.send("I'm not in even in a voice channel ¯\\_(ツ)_/¯ ")
+            
+            delete playlists[message.guild.id]
+
+            if(connections[message.guild.id] != null) {
+                connections[message.guild.id].disconnect()
+            }
             message.channel.send("Aight im boutta head out")
         break;
 
         case 'a':
         case 'add':
             if (!accessCheck(message)) return
-            
-            // new server, initialize playlist
-            if(playlists[message.guild.id] == undefined){
-                playlists[message.guild.id] = []
-            }
             
             let empty = false
             if(playlists[message.guild.id].length === 0){
@@ -227,19 +252,20 @@ client.on('message', message => {
                 return
             }
 
-            // add numbers
-            nums = []
-            for(let a of args){
-                a = parseInt(a, 10)
-                if(isNaN(a)) continue
-                if (a < 0 || a > searchresults[message.guild.id].length - 1) continue
-                nums.push(searchresults[message.guild.id][a])
-            }
+            { // add numbers
+                nums = []
+                for(let a of args){
+                    a = parseInt(a, 10)
+                    if(isNaN(a)) continue
+                    if (a < 0 || a > searchresults[message.guild.id].length - 1) continue
+                    nums.push(searchresults[message.guild.id][a])
+                }
 
-            addTrack(nums, message)
-            
-            if(empty && playlists[message.guild.id].length > 0){
-                play(message.guild.id)
+                addTrack(nums, message)
+                
+                if(empty && playlists[message.guild.id].length > 0){
+                    play(message.guild.id)
+                }
             }
         break;
 
@@ -250,6 +276,12 @@ client.on('message', message => {
             if(message.guild.me.voice.channel) return message.channel.send("You are not in the right voice channel, stealing is bad you know")
 
             message.member.voice.channel.join().then(c => {
+
+                // new server, initialize playlist
+                if(!(message.guild.id in playlists)){
+                    playlists[message.guild.id] = []
+                }
+
                 connections[message.guild.id] = c
                 message.channel.send(helpMessage)
             }).catch(e => console.log(e))
@@ -307,10 +339,10 @@ client.on('message', message => {
                 return
             }
             
-            let current = playlists[message.guild.id].shift()
-            shuffleArray(playlists[message.guild.id])
-            playlists[message.guild.id].unshift(current)
             {
+                let current = playlists[message.guild.id].shift()
+                shuffleArray(playlists[message.guild.id])
+                playlists[message.guild.id].unshift(current)
                 let m = "New playlist: ```"
                 for(let [k, v] of Object.entries(playlists[message.guild.id])){
                     if (k == 0) {
