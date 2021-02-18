@@ -1,9 +1,9 @@
-const Discord = require('discord.js');
-const auth = require('./auth.json');
-const fetch = require('node-fetch');
+const Discord = require('discord.js')
+const auth = require('./auth.json')
+const fetch = require('node-fetch')
 
-const client = new Discord.Client();
-client.login(auth.token);
+const client = new Discord.Client()
+client.login(auth.token)
 
 const helpMessage = 
 `\`$join\` to enter your voice chat
@@ -25,7 +25,7 @@ let connections = {}
 
 client.on('ready', () => {
     console.log("bot started")
-});
+})
 
 function play(guild_id){
     if(playlists[guild_id] == undefined || playlists[guild_id] == 0){
@@ -39,7 +39,7 @@ function play(guild_id){
     
     connections[guild_id].play(root + playlists[guild_id][0].Path).on("finish", () => 
         nextSong(guild_id)
-    );
+    )
 }
 
 function incPlayCounter(id){
@@ -78,11 +78,11 @@ function accessCheck(message){
         return false
     }
     if (!message.guild.me.voice.channel){
-        message.channel.send("I'm not in a voice channel yet :(\nuse `$join`");
+        message.channel.send("I'm not in a voice channel yet :(\nuse `$join`")
         return false
     }
     if (message.guild.me.voice.channel.id != message.member.voice.channel.id){
-        message.channel.send("You are not in the right voice channel");
+        message.channel.send("You are not in the right voice channel")
         return false
     } 
     return true
@@ -90,7 +90,7 @@ function accessCheck(message){
 
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(Math.random() * (i + 1))
         [array[i], array[j]] = [array[j], array[i]];
     }
 }
@@ -111,9 +111,9 @@ client.on('message', message => {
     // log incoming commands
     console.log(`new command: ${message.content}`)
 
-    var args = message.content.substring(1).split(' ');
+    var args = message.content.substring(1).split(' ')
     var cmd = args[0];
-    args = args.splice(1);
+    args = args.splice(1)
 
     switch(cmd) {
 
@@ -162,7 +162,7 @@ client.on('message', message => {
         case 'remove':
             if (!accessCheck(message)) return            
             
-            if (playlists[message.guild.id].length === 0) message.channel.send("There's nothing in the playlist yet");
+            if (playlists[message.guild.id].length === 0) message.channel.send("There's nothing in the playlist yet")
             
             let n = parseInt(args[0], 10)
             if (n == NaN) {
@@ -190,7 +190,7 @@ client.on('message', message => {
         case 'stop':
         case 'leave':
         case 'disconnect':
-            if (!message.guild.me.voice.channel && connections[message.guild.id] == null) return message.channel.send("I'm not in even in a voice channel ¯\\_(ツ)_/¯ ");
+            if (!message.guild.me.voice.channel && connections[message.guild.id] == null) return message.channel.send("I'm not in even in a voice channel ¯\\_(ツ)_/¯ ")
             playlists[message.guild.id] = []
             if(connections[message.guild.id] != null) connections[message.guild.id].disconnect()
             message.channel.send("Aight im boutta head out")
@@ -246,10 +246,12 @@ client.on('message', message => {
         case 'connect':
         case 'start':
         case 'join':
-            if (!message.member.voice.channel) return message.channel.send("You must be in a voice channel.");
+            if(!message.member.voice.channel) return message.channel.send("You must be in a voice channel.")
+            if(message.guild.me.voice.channel) return message.channel.send("You are not in the right voice channel, stealing is bad you know")
+
             message.member.voice.channel.join().then(c => {
                 connections[message.guild.id] = c
-                message.channel.send(helpMessage);
+                message.channel.send(helpMessage)
             }).catch(e => console.log(e))
 
         break;
@@ -347,4 +349,4 @@ client.on('message', message => {
         break;
 
     }
-});
+})
