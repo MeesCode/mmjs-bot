@@ -87,6 +87,13 @@ function accessCheck(message){
     return true
 }
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 client.on('message', message => {
 
     // not a command
@@ -272,16 +279,43 @@ client.on('message', message => {
                 return
             }
             
-            let m = "Queue: ```"
-            for(let [k, v] of Object.entries(playlists[message.guild.id])){
-                if (k == 0) {
-                    m += `${k}. (playing) ${trackToTitle(v)}\n`
-                } else {
-                    m += `${k}. ${trackToTitle(v)}\n`
+            { // dont let m leave the scope
+                let m = "Queue: ```"
+                for(let [k, v] of Object.entries(playlists[message.guild.id])){
+                    if (k == 0) {
+                        m += `${k}. (playing) ${trackToTitle(v)}\n`
+                    } else {
+                        m += `${k}. ${trackToTitle(v)}\n`
+                    }
                 }
+                m += '```'
+                message.channel.send(m)
             }
-            m += '```'
-            message.channel.send(m)
+        break;
+
+        case 'shuffle':
+            if (!accessCheck(message)) return            
+            if(playlists[message.guild.id].length === 0){
+                message.channel.send('Queue is empty')
+                return
+            }
+            
+            let current = playlists[message.guild.id].shift()
+            shuffleArray(playlists[message.guild.id])
+            playlists[message.guild.id].unshift(current)
+            {
+                let m = "New playlist: ```"
+                for(let [k, v] of Object.entries(playlists[message.guild.id])){
+                    if (k == 0) {
+                        m += `${k}. (playing) ${trackToTitle(v)}\n`
+                    } else {
+                        m += `${k}. ${trackToTitle(v)}\n`
+                    }
+                }
+                m += '```'
+
+                message.channel.send(m)
+            }
         break;
 
         case 'populair':
@@ -297,7 +331,7 @@ client.on('message', message => {
                 searchresults[message.guild.id] = data
                 let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
                 for(let [k, v] of Object.entries(data)){
-                    m += `${k}. ${trackToTitle(v)} (${v.Plays})\n`
+                    m += `${k}. ${trackToTitle(v)} (${v.Plays} plays)\n`
                 }
                 m += '```'
                 message.channel.send(m)
