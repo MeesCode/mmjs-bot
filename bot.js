@@ -104,7 +104,7 @@ function cleanup(){
             if(guild.me.voice.channel){
                 if(guild.me.voice.channel.members.array().length == 1){
 
-                    delete playlists[message.guild.id]
+                    delete playlists[guild.id]
 
                     // this if statement should not ever _not_ fire
                     // but i'm scared to remove it
@@ -115,7 +115,7 @@ function cleanup(){
             }
 
         })
-        .catch(err => console.log(`guild not found: ${error}`))
+        .catch(err => console.log(`guild not found: ${err}`))
     }
 }
 
