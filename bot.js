@@ -146,6 +146,8 @@ function cleanup(){
 
                     delete playlists[guild.id]
 
+                    console.log(`automatic disconnect from, guild ${guild.id}`)
+
                     // this if statement should not ever _not_ fire
                     // but i'm scared to remove it
                     if(connections[g] != null) {
