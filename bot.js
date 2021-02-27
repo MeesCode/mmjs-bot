@@ -2,21 +2,44 @@ const Discord = require('discord.js')
 const auth = require('./auth.json')
 const fetch = require('node-fetch')
 
+// check if there is a root path for the mp3 files
+const root = process.argv[2]
+if(process.argv[2] === null | process.argv[2] === undefined | process.argv[2] === ""){
+    console.log("select the root path for the mp3 files")
+    return
+}
+
 const client = new Discord.Client()
 client.login(auth.token)
 
+const com = '$'
+const color = 4764804
+
 const helpMessage = 
-`\`$join\` to enter your voice chat
-\`$leave\` to leave the voicechat
-\`$search <term>\` to perform a search query (max 10)
-\`$random\` to get a list of 10 random tracks
-\`$popular\` to get a list of the 10 most popular tracks
-\`$add [#|all]\` to add a search result(s) to the playlist
-\`$remove #\` to remove a track from the playlist
-\`$skip\`  to go to the next song
-\`$queue\` to see to current queue
-\`$f12\` to skip to the next number`
-const root = process.argv[2]
+{
+    "content": "Joining your channel",
+    "embed": {
+        "color": color,
+        "fields": [
+            { "name": `${com}join`, "value": "to enter your voice chat"},
+            { "name": `${com}leave`, "value": "to leave the voicechat" },
+            { "name": `${com}search <term>`, "value": "to perform a search query (max 10)" },
+            { "name": `${com}random`, "value": "to get a list of 10 random tracks" },
+            { "name": `${com}popular`, "value": "to get a list of the 10 most popular tracks" },
+            { "name": `${com}add [#|all]`, "value": "to add a search result(s) to the playlist" },
+            { "name": `${com}remove #`, "value": "to remove a track from the playlist" },
+            { "name": `${com}f12`,  "value": "to go to the next song" },
+            { "name": `${com}shuffle`, "value": "shuffle the playlist" },
+            { "name": `${com}queue`, "value": "to see to current queue" },
+        ]
+    }
+}
+
+const messagetemplate = {
+    "embed": {
+        "color": color,
+    }
+}
 
 // variables to hold the playlist search results
 let playlists = {}
@@ -51,18 +74,33 @@ function nextSong(guild_id){
     play(guild_id)
 }
 
+function listToMessage(content, list, playing = false){
+    m = JSON.parse(JSON.stringify(messagetemplate))
+    m.content = content
+    m.embed.descripttion = ""
+    let i = 0
+    let string = ""
+    for(let n of list){
+        if(i == 0 && playing){
+            string += `\`${i}.\` **(playing)** ${trackToTitle(n)}\n`
+        } else {
+            string += `\`${i}.\` ${trackToTitle(n)}\n`
+        }
+        i++
+    }
+    m.embed.description = string
+    return m
+}
+
 function addTrack(tracks, message){
     if(tracks.length == 0){
         message.channel.send("No tracks added")
         return
     }
-    m = `Added to playlist:\`\`\``
     for(let n of tracks){
-        m += `${trackToTitle(n)}\n`
         playlists[message.guild.id].push(n)
     }
-    m += '\`\`\`'
-    message.channel.send(m)
+    message.channel.send(listToMessage("New playlist", playlists[message.guild.id], true))
 }
 
 function trackToTitle(data){
@@ -89,9 +127,11 @@ function accessCheck(message){
 }
 
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        [array[i], array[j]] = [array[j], array[i]];
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
     }
 }
 
@@ -160,12 +200,7 @@ client.on('message', message => {
                     return
                 }
                 searchresults[message.guild.id] = data
-                let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
-                for(let [k, v] of Object.entries(data)){
-                    m += `${k}. ${trackToTitle(v)}\n`
-                }
-                m += '```'
-                message.channel.send(m)
+                message.channel.send(listToMessage("Add to playlist by entering `$add <list of numbers>` or `$add all`: ```", data))
             })
             .catch(res => {
                 message.channel.send(`Database not responding`)
@@ -242,7 +277,7 @@ client.on('message', message => {
             }
 
             // add everything
-            if(args[0] == 'all') {
+            if(args[0] === 'all') {
                 addTrack(searchresults[message.guild.id], message)
 
                 if(empty && playlists[message.guild.id].length > 0){
@@ -293,17 +328,12 @@ client.on('message', message => {
             fetch(`http://localhost:8080/random`)
             .then(res => res.json())
             .then(data => {
-                if(Object.entries(data).length == 0){
+                if(Object.entries(data).length === 0){
                     message.channel.send('No entries found :(')
                     return
                 }
                 searchresults[message.guild.id] = data
-                let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
-                for(let [k, v] of Object.entries(data)){
-                    m += `${k}. ${trackToTitle(v)}\n`
-                }
-                m += '```'
-                message.channel.send(m)
+                message.channel.send(listToMessage("Add to playlist by entering `$add <list of numbers>` or `$add all`: ```", data))
             })
             .catch(res => {
                 message.channel.send(`Database not responding`)
@@ -317,19 +347,8 @@ client.on('message', message => {
                 message.channel.send('Queue is empty')
                 return
             }
-            
-            { // dont let m leave the scope
-                let m = "Queue: ```"
-                for(let [k, v] of Object.entries(playlists[message.guild.id])){
-                    if (k == 0) {
-                        m += `${k}. (playing) ${trackToTitle(v)}\n`
-                    } else {
-                        m += `${k}. ${trackToTitle(v)}\n`
-                    }
-                }
-                m += '```'
-                message.channel.send(m)
-            }
+
+            message.channel.send(listToMessage("Queue:", playlists[message.guild.id], true))
         break;
 
         case 'shuffle':
@@ -339,22 +358,10 @@ client.on('message', message => {
                 return
             }
             
-            {
-                let current = playlists[message.guild.id].shift()
-                shuffleArray(playlists[message.guild.id])
-                playlists[message.guild.id].unshift(current)
-                let m = "New playlist: ```"
-                for(let [k, v] of Object.entries(playlists[message.guild.id])){
-                    if (k == 0) {
-                        m += `${k}. (playing) ${trackToTitle(v)}\n`
-                    } else {
-                        m += `${k}. ${trackToTitle(v)}\n`
-                    }
-                }
-                m += '```'
-
-                message.channel.send(m)
-            }
+            let current = playlists[message.guild.id].shift()
+            shuffleArray(playlists[message.guild.id])
+            playlists[message.guild.id].unshift(current)
+            message.channel.send(listToMessage("New playlist:", playlists[message.guild.id], true))
         break;
 
         case 'populair':
@@ -363,17 +370,12 @@ client.on('message', message => {
             fetch(`http://localhost:8080/popular`)
             .then(res => res.json())
             .then(data => {
-                if(Object.entries(data).length == 0){
+                if(Object.entries(data).length === 0){
                     message.channel.send('No entries found :(')
                     return
                 }
                 searchresults[message.guild.id] = data
-                let m = "Add to playlist by entering `$add <list of numbers>` or `$add all`: ```"
-                for(let [k, v] of Object.entries(data)){
-                    m += `${k}. ${trackToTitle(v)} (${v.Plays} plays)\n`
-                }
-                m += '```'
-                message.channel.send(m)
+                message.channel.send(listToMessage("Add to playlist by entering `$add <list of numbers>` or `$add all`: ```", data))
             })
             .catch(res => {
                 message.channel.send(`Database not responding`)
